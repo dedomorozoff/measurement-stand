@@ -1,212 +1,281 @@
 import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Award, CircleHelp, RotateCcw } from "lucide-react";
-import { Reveal, Section } from "./ui";
-import { cn } from "../utils/cn";
+import { handleChoiceKeys } from "../utils/keyboard";
+import { motion } from "motion/react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCheck,
+  ChevronDown,
+  Lightbulb,
+  RotateCcw,
+  X,
+} from "lucide-react";
+import { questions } from "../data";
 
-type Q = { q: string; options: string[]; correct: number; why: string };
+type Props = {
+  savedScore: number | null;
+  onComplete: (score: number) => void;
+  onTheory: () => void;
+};
 
-const QUESTIONS: Q[] = [
-  {
-    q: "Погрешность, остающаяся постоянной или закономерно изменяющаяся при повторных измерениях одной величины — это…",
-    options: ["случайная", "систематическая", "грубая (промах)", "динамическая"],
-    correct: 1,
-    why: "Систематическая погрешность действует в одну сторону: её выявляют по смещению результатов и устраняют калибровкой или поправкой.",
-  },
-  {
-    q: "Абсолютная погрешность измерения вычисляется по формуле:",
-    options: ["Δ = Xизм − Xист", "δ = Δ / X · 100 %", "γ = Δ / XN · 100 %", "s = Σ(xi − x̄)²"],
-    correct: 0,
-    why: "Δ = Xизм − Xист. Она выражается в единицах измеряемой величины и пишется в записи результата: X = Xизм ± Δ.",
-  },
-  {
-    q: "Приведённая погрешность γ — это отношение абсолютной погрешности к…",
-    options: ["измеренному значению Xизм", "истинному значению Xист", "нормирующему значению XN", "среднеквадратичному отклонению"],
-    correct: 2,
-    why: "γ = (Δ / XN) · 100 %. Нормирующее значение обычно равно пределу шкалы — именно по γ определяют класс точности.",
-  },
-  {
-    q: "Вольтметр 0–300 В, класс точности 1.5. Предел допустимой погрешности прибора:",
-    options: ["±1.5 В", "±2.25 В", "±4.5 В", "±15 В"],
-    correct: 2,
-    why: "Δдоп = κ·XN/100 = 1.5·300/100 = ±4.5 В — и одинаков для любой точки шкалы.",
-  },
-  {
-    q: "Термопара, преобразующая температуру в ЭДС, относится к виду средств измерений:",
-    options: ["мера", "измерительный прибор", "измерительный преобразователь", "измерительная система"],
-    correct: 2,
-    why: "Преобразователь переводит измеряемую величину в другую, удобную для передачи и обработки: T → ЭДС.",
-  },
-  {
-    q: "Мера — это средство измерений, которое…",
-    options: [
-      "преобразует величину в сигнал связи",
-      "вырабатывает показание на шкале",
-      "воспроизводит величину заданного размера",
-      "объединяет несколько приборов в схему",
-    ],
-    correct: 2,
-    why: "Гиря в 1 кг или образцовое сопротивление имеют известное заранее значение — это и есть мера.",
-  },
-  {
-    q: "Грубую погрешность (промах) в ряду результатов следует…",
-    options: ["усреднить вместе с остальными", "исключить из обработки", "уменьшить вдвое", "считать систематической"],
-    correct: 1,
-    why: "Промах резко отличается от остальных отсчётов: он портит выборку, поэтому его находят по критериям и удаляют.",
-  },
-  {
-    q: "Цена деления шкалы прибора — это…",
-    options: [
-      "стоимость одного деления шкалы",
-      "число делений всей шкалы",
-      "значение величины, вызывающее перемещение указателя на одно деление",
-      "погрешность отсчёта по шкале",
-    ],
-    correct: 2,
-    why: "C = XN / Nдел. Например, при шкале 0–300 В и 150 делениях C = 2 В/дел.",
-  },
-];
+export default function Quiz({ savedScore, onComplete, onTheory }: Props) {
+  const [answers, setAnswers] = useState<number[]>(questions.map(() => -1));
+  const [checked, setChecked] = useState<boolean[]>(questions.map(() => false));
+  const [index, setIndex] = useState(0);
+  const [finished, setFinished] = useState(savedScore !== null);
+  const [score, setScore] = useState(savedScore ?? 0);
+  const question = questions[index];
+  const isChecked = checked[index];
+  const isCorrect = answers[index] === question.correct;
 
-const LETTERS = ["А", "Б", "В", "Г"];
-
-export default function Quiz() {
-  const [idx, setIdx] = useState(0);
-  const [picked, setPicked] = useState<number | null>(null);
-  const [score, setScore] = useState(0);
-  const [done, setDone] = useState(false);
-
-  const q = QUESTIONS[idx];
-  const pick = (i: number) => {
-    if (picked !== null) return;
-    setPicked(i);
-    if (i === q.correct) setScore((s) => s + 1);
-  };
-  const next = () => {
-    if (idx + 1 >= QUESTIONS.length) setDone(true);
+  function restart() {
+    setAnswers(questions.map(() => -1));
+    setChecked(questions.map(() => false));
+    setIndex(0);
+    setFinished(false);
+  }
+  function advance() {
+    if (index < questions.length - 1) setIndex(index + 1);
     else {
-      setIdx((i) => i + 1);
-      setPicked(null);
+      const total = answers.filter(
+        (answer, questionIndex) => answer === questions[questionIndex].correct,
+      ).length;
+      setScore(total);
+      setFinished(true);
+      onComplete(total);
     }
-  };
-  const restart = () => {
-    setIdx(0);
-    setPicked(null);
-    setScore(0);
-    setDone(false);
-  };
-
-  const pct = Math.round((score / QUESTIONS.length) * 100);
-  const verdict =
-    pct >= 88 ? "Метролог СИ-ликвидатор. Тема усвоена отлично." :
-    pct >= 63 ? "Уверенное знание темы. Повторите допущенные пункты." :
-    "Стоит вернуться к главам стенда и пройти лабораторию ещё раз.";
+  }
 
   return (
-    <Section
-      id="quiz"
-      chapter="07"
-      kicker="контроль знаний"
-      title={
-        <>
-          Итоговый <span className="text-amber">тест</span>
-        </>}
-      lede="Восемь вопросов по обеим частям темы: типы погрешностей, формулы, классы точности и виды средств измерений. После каждого ответа — краткое пояснение."
-    >
-      <Reveal>
-        <div className="panel mx-auto max-w-4xl rounded-sm">
-          {/* progress */}
-          <div className="h-1 w-full bg-line">
-            <motion.div
-              className="h-full bg-gradient-to-r from-amber to-cyanx"
-              animate={{ width: `${((done ? QUESTIONS.length : idx) / QUESTIONS.length) * 100}%` }}
-              transition={{ duration: 0.5 }}
+    <div className="learning-page quiz-page">
+      <div className="page-heading">
+        <span className="eyebrow">04 / ЗАКРЕПЛЯЕМ ГЛАВНОЕ</span>
+        <h1>Проверка знаний</h1>
+        <p>
+          Шесть вопросов без таймера. После каждого ответа разберёмся, почему он
+          верный.
+        </p>
+      </div>
+      {finished ? (
+        <motion.div
+          className="quiz-result-panel"
+          initial={{ opacity: 0, y: 14 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <div className="score-circle">
+            <svg viewBox="0 0 160 160">
+              <circle
+                cx="80"
+                cy="80"
+                r="68"
+                fill="none"
+                stroke="#eeebf5"
+                strokeWidth="7"
+              />
+              <motion.circle
+                cx="80"
+                cy="80"
+                r="68"
+                fill="none"
+                stroke="#8966ce"
+                strokeWidth="7"
+                strokeLinecap="round"
+                strokeDasharray={427.26}
+                initial={{ strokeDashoffset: 427.26 }}
+                animate={{
+                  strokeDashoffset: 427.26 * (1 - score / questions.length),
+                }}
+                transition={{ duration: 1.2, ease: "easeOut" }}
+                transform="rotate(-90 80 80)"
+              />
+            </svg>
+            <div>
+              <strong>{score}</strong>
+              <span>из {questions.length}</span>
+            </div>
+          </div>
+          <span className="eyebrow">ТЕСТ ЗАВЕРШЁН</span>
+          <h2>
+            {score === 6
+              ? "Точность в ваших руках!"
+              : score >= 4
+                ? "Хорошая основа уже есть"
+                : "Каждый ответ - шаг к пониманию"}
+          </h2>
+          <p>
+            {score === 6
+              ? "Вы уверенно ориентируетесь в погрешностях и свойствах приборов."
+              : "Посмотрите правильные ответы и вернитесь к теории, чтобы закрепить сложные моменты."}
+          </p>
+          <div className="result-button-group">
+            <button className="primary-button" onClick={restart}>
+              <RotateCcw size={16} /> Пройти ещё раз
+            </button>
+            <button className="secondary-button" onClick={onTheory}>
+              Вернуться к теории <ArrowRight size={16} />
+            </button>
+          </div>
+          <details className="answer-review">
+            <summary>
+              Разобрать правильные ответы <ChevronDown size={17} />
+            </summary>
+            <div>
+              {questions.map((item, questionIndex) => (
+                <article key={item.question}>
+                  <span className="review-number">
+                    {String(questionIndex + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <h3>{item.question}</h3>
+                    <p className="review-correct">
+                      <Check size={15} />
+                      {item.options[item.correct]}
+                    </p>
+                    <p>{item.explanation}</p>
+                    {answers[questionIndex] >= 0 &&
+                      answers[questionIndex] !== item.correct && (
+                        <p className="review-wrong">
+                          Ваш ответ: {item.options[answers[questionIndex]]}
+                        </p>
+                      )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </details>
+        </motion.div>
+      ) : (
+        <div className="quiz-workbench">
+          <div className="quiz-topline">
+            <span>
+              ВОПРОС <b>{String(index + 1).padStart(2, "0")}</b>
+              <span> / {String(questions.length).padStart(2, "0")}</span>
+            </span>
+            <span>{question.topic}</span>
+          </div>
+          <div className="quiz-progress">
+            <motion.span
+              animate={{
+                width: `${((index + (isChecked ? 1 : 0)) / questions.length) * 100}%`,
+              }}
             />
           </div>
-
-          <div className="p-6 sm:p-10">
-            <AnimatePresence mode="wait">
-              {!done ? (
-                <motion.div key={idx} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}>
-                  <div className="mb-6 flex items-center justify-between font-mono text-[11px] tracking-[0.25em] uppercase text-fog">
-                    <span className="flex items-center gap-2"><CircleHelp size={14} className="text-amber" /> вопрос</span>
-                    <span className="tabular"><span className="text-amber">{String(idx + 1).padStart(2, "0")}</span> / {String(QUESTIONS.length).padStart(2, "0")}</span>
-                  </div>
-
-                  <h3 className="min-h-20 font-display text-base font-semibold leading-snug sm:text-xl">{q.q}</h3>
-
-                  <div className="mt-7 grid gap-2.5 sm:grid-cols-2">
-                    {q.options.map((o, i) => {
-                      const isCorrect = i === q.correct;
-                      const isPicked = i === picked;
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => pick(i)}
-                          disabled={picked !== null}
-                          className={cn(
-                            "group flex items-center gap-3 border px-4 py-3.5 text-left text-sm transition-all duration-300",
-                            picked === null && "border-line hover:border-amber/60 hover:bg-amber/5",
-                            picked !== null && isCorrect && "border-mint bg-mint/10 text-mint",
-                            picked !== null && isPicked && !isCorrect && "border-rose bg-rose/10 text-rose",
-                            picked !== null && !isPicked && !isCorrect && "border-line opacity-40",
-                          )}
-                        >
-                          <span className={cn("grid size-6 shrink-0 place-items-center border font-mono text-[10px]", 
-                            picked !== null && isCorrect ? "border-mint text-mint" : picked !== null && isPicked ? "border-rose text-rose" : "border-line-2 text-fog group-hover:border-amber group-hover:text-amber")}>
-                            {LETTERS[i]}
-                          </span>
-                          {o}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <AnimatePresence>
-                    {picked !== null && (
-                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
-                        <div className="mt-5 border border-line bg-ink p-4 text-sm leading-relaxed text-fog">
-                          <span className="font-mono text-[10px] tracking-[0.2em] uppercase text-cyanx">пояснение — </span>
-                          {q.why}
-                        </div>
-                        <button onClick={next} className="mt-4 flex w-full items-center justify-center gap-2 border border-amber bg-amber px-6 py-3.5 font-mono text-xs font-bold tracking-[0.2em] uppercase text-ink transition-transform hover:-translate-y-0.5 sm:w-auto sm:ml-auto">
-                          {idx + 1 === QUESTIONS.length ? "к результату" : "следующий вопрос"} <ArrowRight size={14} />
-                        </button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </motion.div>
-              ) : (
-                <motion.div key="result" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="flex flex-col items-center py-6 text-center">
-                  <div className="relative grid place-items-center">
-                    <svg viewBox="0 0 120 120" className="size-40 -rotate-90">
-                      <circle cx="60" cy="60" r="52" fill="none" stroke="#232a31" strokeWidth="8" />
-                      <motion.circle
-                        cx="60" cy="60" r="52" fill="none" stroke="#ffb320" strokeWidth="8" strokeLinecap="round"
-                        strokeDasharray={2 * Math.PI * 52}
-                        initial={{ strokeDashoffset: 2 * Math.PI * 52 }}
-                        animate={{ strokeDashoffset: 2 * Math.PI * 52 * (1 - pct / 100) }}
-                        transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: 0.2 }}
-                      />
-                    </svg>
-                    <div className="absolute">
-                      <div className="font-display text-3xl font-bold tabular">{pct}%</div>
-                      <div className="font-mono text-[9px] tracking-[0.2em] uppercase text-fog">{score} из {QUESTIONS.length}</div>
-                    </div>
-                  </div>
-                  <Award size={22} className="mt-6 text-amber" />
-                  <h3 className="mt-3 font-display text-lg font-semibold uppercase tracking-wide sm:text-xl">{verdict}</h3>
-                  <p className="mt-2 max-w-md text-sm text-fog">
-                    Повторение — мать измерения. Вернитесь к интерактивным моделям и закрепите слабые места.
-                  </p>
-                  <button onClick={restart} className="mt-6 flex items-center gap-2 border border-line-2 px-6 py-3 font-mono text-xs tracking-[0.2em] uppercase text-fog transition-all hover:border-amber hover:text-amber">
-                    <RotateCcw size={14} /> пройти заново
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25 }}
+          >
+            <h2 className="question-heading">{question.question}</h2>
+            <div
+              className="quiz-options"
+              role="radiogroup"
+              aria-label="Варианты ответа"
+              onKeyDown={handleChoiceKeys}
+            >
+              {question.options.map((option, optionIndex) => {
+                const selected = answers[index] === optionIndex;
+                const correct = isChecked && optionIndex === question.correct;
+                const wrong = isChecked && selected && !correct;
+                return (
+                  <button
+                    key={option}
+                    role="radio"
+                    aria-checked={selected}
+                    tabIndex={
+                      selected || (answers[index] < 0 && optionIndex === 0)
+                        ? 0
+                        : -1
+                    }
+                    disabled={isChecked}
+                    className={`quiz-option ${selected ? "selected" : ""} ${correct ? "correct" : ""} ${wrong ? "wrong" : ""}`}
+                    onClick={() =>
+                      setAnswers((previous) =>
+                        previous.map((value, questionIndex) =>
+                          questionIndex === index ? optionIndex : value,
+                        ),
+                      )
+                    }
+                  >
+                    <span className="option-letter">
+                      {["А", "Б", "В", "Г"][optionIndex]}
+                    </span>
+                    <span>{option}</span>
+                    <span className="option-indicator">
+                      {correct ? (
+                        <Check size={16} />
+                      ) : wrong ? (
+                        <X size={16} />
+                      ) : selected ? (
+                        <span />
+                      ) : null}
+                    </span>
                   </button>
-                </motion.div>
+                );
+              })}
+            </div>
+            {isChecked && (
+              <motion.div
+                className={`answer-feedback ${isCorrect ? "is-correct" : "is-wrong"}`}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+              >
+                <div>
+                  <Lightbulb size={20} />
+                </div>
+                <div>
+                  <strong>
+                    {isCorrect
+                      ? "Верно! Разберёмся подробнее."
+                      : "Не совсем. Вот как рассуждать."}
+                  </strong>
+                  <p>{question.explanation}</p>
+                </div>
+              </motion.div>
+            )}
+            <div className="quiz-bottomline">
+              <button
+                className="back-question"
+                onClick={() => setIndex(index - 1)}
+                disabled={index === 0}
+              >
+                <ArrowLeft size={16} /> Назад
+              </button>
+              {isChecked ? (
+                <button className="primary-button" onClick={advance}>
+                  {index === questions.length - 1
+                    ? "Завершить тест"
+                    : "Следующий вопрос"}
+                  {index === questions.length - 1 ? (
+                    <CheckCheck size={17} />
+                  ) : (
+                    <ArrowRight size={17} />
+                  )}
+                </button>
+              ) : (
+                <button
+                  className="primary-button"
+                  disabled={answers[index] < 0}
+                  onClick={() =>
+                    setChecked((previous) =>
+                      previous.map((value, questionIndex) =>
+                        questionIndex === index ? true : value,
+                      ),
+                    )
+                  }
+                >
+                  Проверить ответ <ArrowRight size={17} />
+                </button>
               )}
-            </AnimatePresence>
-          </div>
+            </div>
+          </motion.div>
         </div>
-      </Reveal>
-    </Section>
+      )}
+      <p className="quiz-footnote">
+        <Lightbulb size={16} /> Здесь можно ошибаться. Важно понять причину и
+        попробовать снова.
+      </p>
+    </div>
   );
 }
