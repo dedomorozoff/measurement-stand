@@ -10,6 +10,9 @@ const __dirname = path.dirname(__filename);
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Относительный base — сборка работает по любому пути (GitHub Pages,
+  // локальный preview, поддомен), т.к. viteSingleFile инлайнит всё в index.html
+  base: "./",
   plugins: [react(), tailwindcss(), viteSingleFile()],
   resolve: {
     alias: {
