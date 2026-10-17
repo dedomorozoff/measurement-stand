@@ -2,11 +2,32 @@ import { motion } from "motion/react";
 import type { InstrumentId } from "../data";
 import { formatNumber } from "../utils/measurements";
 
-type Props = { type: InstrumentId; value: number; max: number; unit: string };
+type Props = {
+  type: InstrumentId;
+  value: number;
+  max: number;
+  unit: string;
+  /** Допустимая погрешность: рисуется полосой вокруг указателя. */
+  band?: number;
+};
 
-export default function InstrumentVisual({ type, value, max, unit }: Props) {
+export default function InstrumentVisual({ type, value, max, unit, band }: Props) {
   const jaw = 140 + value * 3.2;
-  const angle = -65 + (value / max) * 130;
+  const angleOf = (v: number) => -65 + (v / max) * 130;
+  const angle = angleOf(value);
+  const arcRadius = 172;
+  const bandArc = (() => {
+    if (!band || type !== "voltmeter") return null;
+    const low = angleOf(Math.max(0, value - band));
+    const high = angleOf(Math.min(max, value + band));
+    const toPoint = (deg: number) => ({
+      x: 400 + Math.cos((deg * Math.PI) / 180) * arcRadius,
+      y: 275 + Math.sin((deg * Math.PI) / 180) * arcRadius,
+    });
+    const from = toPoint(low);
+    const to = toPoint(high);
+    return `M ${from.x} ${from.y} A ${arcRadius} ${arcRadius} 0 0 1 ${to.x} ${to.y}`;
+  })();
 
   return (
     <svg
@@ -431,6 +452,23 @@ export default function InstrumentVisual({ type, value, max, unit }: Props) {
           >
             1,5
           </text>
+          {bandArc && (
+            <>
+              <path
+                d={bandArc}
+                fill="none"
+                stroke="rgba(138,101,206,0.16)"
+                strokeWidth="16"
+                strokeLinecap="round"
+              />
+              <path
+                d={bandArc}
+                fill="none"
+                stroke="rgba(138,101,206,0.45)"
+                strokeWidth="1.5"
+              />
+            </>
+          )}
           <motion.g
             animate={{ rotate: angle }}
             style={{ transformOrigin: "400px 275px" }}

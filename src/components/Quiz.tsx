@@ -50,7 +50,7 @@ export default function Quiz({ savedScore, onComplete, onTheory }: Props) {
   return (
     <div className="learning-page quiz-page">
       <div className="page-heading">
-        <span className="eyebrow">04 / ЗАКРЕПЛЯЕМ ГЛАВНОЕ</span>
+        <span className="eyebrow">05 / ЗАКРЕПЛЯЕМ ГЛАВНОЕ</span>
         <h1>Проверка знаний</h1>
         <p>
           Шесть вопросов без таймера. После каждого ответа разберёмся, почему он
@@ -97,14 +97,14 @@ export default function Quiz({ savedScore, onComplete, onTheory }: Props) {
           </div>
           <span className="eyebrow">ТЕСТ ЗАВЕРШЁН</span>
           <h2>
-            {score === 6
+            {score === questions.length
               ? "Точность в ваших руках!"
-              : score >= 4
+              : score / questions.length >= 0.7
                 ? "Хорошая основа уже есть"
                 : "Каждый ответ - шаг к пониманию"}
           </h2>
           <p>
-            {score === 6
+            {score === questions.length
               ? "Вы уверенно ориентируетесь в погрешностях и свойствах приборов."
               : "Посмотрите правильные ответы и вернитесь к теории, чтобы закрепить сложные моменты."}
           </p>

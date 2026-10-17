@@ -612,7 +612,7 @@ svg {
 }
 .module-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   margin-top: 28px;
 }
 .module-link {
@@ -663,6 +663,10 @@ svg {
 .module-link.green .module-icon {
   background: #e9f0ec;
   color: #91ab9f;
+}
+.module-link.teal .module-icon {
+  background: #e6eff1;
+  color: #7ba3aa;
 }
 .module-number {
   color: #c6c0d0;
@@ -3158,4 +3162,601 @@ svg {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ================= Лаборатория: опыты с погрешностями ================= */
+.lab-tabs {
+  gap: 26px;
+  margin-bottom: 24px;
+}
+.lab-tabs > button {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+.lab-tabs > button small {
+  font-size: 9px;
+  color: #b2a4bd;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.lab-tabs > button.active small {
+  color: #a493b8;
+}
+.lab-panel {
+  border: 1px solid #e4deed;
+  background: #fff;
+  border-radius: 10px;
+  padding: 25px 26px 27px;
+}
+.lab-workbench {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 30px;
+  align-items: start;
+}
+.lab-figure {
+  min-width: 0;
+}
+.lab-figure .experiment-topline > span {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lab-figure .experiment-topline b {
+  color: #9a7acd;
+  font-weight: 550;
+}
+.lab-figure .experiment-topline b.curve-key {
+  color: #c98f6b;
+}
+.target-svg {
+  display: block;
+  width: 100%;
+  max-width: 460px;
+  margin: 14px auto 10px;
+  overflow: visible;
+}
+.gauss-canvas {
+  margin-top: 12px;
+}
+.gauss-canvas canvas {
+  display: block;
+  width: 100%;
+}
+.lab-controls {
+  background: #f6f4f9;
+  border: 1px solid #eae4ef;
+  border-radius: 8px;
+  padding: 22px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+.lab-controls > .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 8px;
+  color: #aa95bd;
+}
+.lab-mode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.lab-mode-list > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e6e0ee;
+  border-radius: 7px;
+  padding: 11px 13px;
+}
+.lab-mode-list > button:hover {
+  border-color: #cdbce3;
+}
+.lab-mode-list > button.active {
+  border-color: #a98acc;
+  background: #f6f1fb;
+}
+.lab-mode-list strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #6f6280;
+}
+.lab-mode-list small {
+  display: block;
+  font-size: 9px;
+  color: #a99bb3;
+  margin-top: 3px;
+}
+.mode-mark {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px #fff;
+}
+.lab-actions {
+  display: flex;
+  gap: 8px;
+}
+.lab-actions .primary-button,
+.lab-actions .secondary-button {
+  flex: 1;
+  justify-content: center;
+  font-size: 11px;
+  padding: 12px 10px;
+}
+.lab-actions .icon-button {
+  flex-shrink: 0;
+  border: 1px solid #e0d8ea;
+  background: #fff;
+}
+.lab-stats {
+  border-top: 1px solid #e4ddeb;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.lab-stats > .eyebrow {
+  font-size: 8px;
+  color: #aa95bd;
+}
+.lab-stat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 7px;
+}
+.lab-stat-head span {
+  font-size: 10px;
+  color: #9681a6;
+}
+.lab-stat-head b {
+  font-size: 15px;
+  font-weight: 600;
+  color: #85689e;
+  letter-spacing: -0.3px;
+}
+.lab-stats small {
+  display: block;
+  font-size: 8px;
+  color: #b3a5be;
+  margin-top: 5px;
+}
+.lab-controls .theory-advice {
+  margin-top: 0;
+  font-size: 10.5px;
+  color: #9481a3;
+}
+.sigma-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 7px;
+}
+.sigma-list > button {
+  background: #fff;
+  border: 1px solid #e6e0ee;
+  border-radius: 7px;
+  padding: 10px 6px;
+}
+.sigma-list > button:hover {
+  border-color: #cdbce3;
+}
+.sigma-list > button.active {
+  border-color: #a98acc;
+  background: #f6f1fb;
+}
+.sigma-list strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #85689e;
+}
+.sigma-list small {
+  display: block;
+  font-size: 8.5px;
+  color: #ab9db6;
+  margin-top: 3px;
+}
+.lab-figures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.lab-figures > div {
+  background: #fff;
+  border: 1px solid #e9e4f0;
+  border-radius: 7px;
+  padding: 11px 8px;
+  text-align: center;
+}
+.lab-figures span {
+  display: block;
+  font-size: 10px;
+  color: #a08fb2;
+}
+.lab-figures b {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  color: #8263ad;
+  margin-top: 4px;
+  letter-spacing: -0.4px;
+}
+.lab-figures small {
+  display: block;
+  font-size: 8px;
+  color: #b3a5be;
+  margin-top: 3px;
+}
+.lab-formulas {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 13px;
+}
+.lab-formulas > div {
+  background: #fff;
+  border: 1px solid #e9e4f0;
+  border-radius: 6px;
+  padding: 9px 10px;
+  text-align: center;
+  font-size: 12px;
+  color: #85689e;
+}
+@media (max-width: 1250px) {
+  .module-grid {
+    gap: 0;
+  }
+  .module-link {
+    padding: 0 13px;
+  }
+  .lab-panel {
+    padding: 21px 20px 23px;
+  }
+  .lab-workbench {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .target-svg {
+    max-width: 380px;
+  }
+}
+@media (max-width: 1050px) and (min-width: 801px) {
+  .module-link {
+    padding: 0 10px;
+  }
+  .module-link h3 {
+    font-size: 10.5px;
+  }
+  .module-link p {
+    font-size: 9px;
+  }
+}
+@media (max-width: 800px) {
+  .module-grid {
+    grid-template-columns: 1fr 1fr;
+    row-gap: 24px;
+  }
+  .module-link {
+    padding: 0 16px;
+  }
+  .module-link:nth-child(2n + 1) {
+    padding-left: 0;
+  }
+  .module-link:nth-child(2n) {
+    border-right: 0;
+    padding-right: 0;
+  }
+  .module-link:nth-child(odd) {
+    border-right: 1px solid #e5e5ed;
+  }
+  .module-link:last-child {
+    grid-column: 1 / -1;
+    border-right: 0;
+    padding-left: 0;
+  }
+  .lab-tabs {
+    gap: 16px;
+  }
+  .lab-panel {
+    padding: 18px 16px 20px;
+  }
+  .lab-controls {
+    padding: 18px 15px 16px;
+  }
+  .lab-figures b {
+    font-size: 14px;
+  }
+}
+
+/* ============ Виды средств измерений и тренажёр отсчёта ============ */
+.si-workbench {
+  display: grid;
+  grid-template-columns: 270px 1fr;
+  gap: 26px;
+  margin-top: 26px;
+}
+.si-list {
+  display: flex;
+  flex-direction: column;
+}
+.si-list > button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 1px solid #ece7f2;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8c7c9d;
+  border-radius: 6px;
+}
+.si-list > button:hover {
+  background: #f6f2fb;
+  color: #7c6690;
+}
+.si-list > button.active {
+  background: #f2ecf9;
+  color: #7a5cb0;
+}
+.si-list .property-number {
+  color: #bcafd0;
+  font-size: 10px;
+}
+.si-list > button.active .property-number {
+  color: #a086cc;
+}
+.si-explanation {
+  background: #fff;
+  border: 1px solid #e4deed;
+  border-radius: 10px;
+  padding: 24px 26px 26px;
+}
+.si-explanation h3 {
+  font-size: 21px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+}
+.flow-diagram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+  margin-top: 20px;
+}
+.flow-diagram > span {
+  background: #f4f1f9;
+  border: 1px solid #e5dfee;
+  border-radius: 7px;
+  padding: 10px 13px;
+  font-size: 11px;
+  color: #85749a;
+}
+.flow-diagram > span.device {
+  background: #f3edfa;
+  border-color: #d9c9ec;
+  color: #7f5fae;
+  font-weight: 600;
+}
+.flow-diagram > span.output {
+  background: #eef4f1;
+  border-color: #d5e4dc;
+  color: #6d8a7c;
+}
+.flow-diagram > svg {
+  color: #c3b6d1;
+  flex-shrink: 0;
+}
+.example-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid #eee9f4;
+}
+.example-chips > span {
+  background: #fff;
+  border: 1px solid #e9e4f0;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 10px;
+  color: #9384a6;
+}
+.trainer-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 0 4px;
+}
+.trainer-start {
+  margin-top: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #f4f0fa;
+  border: 1px solid #ddd0ee;
+  color: #7a5cb0;
+  border-radius: 7px;
+  padding: 10px 15px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.trainer-start:hover {
+  background: #ede5f8;
+}
+.trainer-body {
+  margin-top: 22px;
+  background: #f8f6fb;
+  border: 1px solid #e7e1f0;
+  border-radius: 10px;
+  padding: 22px 24px 24px;
+}
+.trainer-task {
+  display: flex;
+  gap: 11px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.85;
+  color: #85749a;
+  max-width: 62ch;
+}
+.trainer-task svg {
+  color: #a98acc;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+.trainer-controls {
+  display: flex;
+  gap: 9px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.trainer-controls .input-with-unit {
+  flex: 1;
+  min-width: 150px;
+}
+.trainer-controls .primary-button,
+.trainer-controls .secondary-button {
+  justify-content: center;
+  font-size: 11px;
+}
+.trainer-controls .icon-button {
+  border: 1px solid #e0d8ea;
+  background: #fff;
+  flex-shrink: 0;
+}
+.stat-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 9px;
+  margin-top: 20px;
+}
+.stat-tiles > div {
+  background: #fff;
+  border: 1px solid #e9e4f0;
+  border-radius: 7px;
+  padding: 12px 10px;
+  text-align: center;
+}
+.stat-tiles span {
+  display: block;
+  font-size: 9.5px;
+  color: #a08fb2;
+}
+.stat-tiles b {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  color: #8263ad;
+  margin-top: 5px;
+  letter-spacing: -0.4px;
+}
+.stat-tiles small {
+  display: block;
+  font-size: 8.5px;
+  color: #b3a5be;
+  margin-top: 4px;
+}
+@media (max-width: 1250px) {
+  .si-workbench {
+    grid-template-columns: 225px 1fr;
+    gap: 20px;
+  }
+}
+@media (max-width: 1050px) and (min-width: 801px) {
+  .si-workbench {
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
+  }
+  .si-explanation {
+    padding: 20px;
+  }
+}
+@media (max-width: 800px) {
+  .si-workbench {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .si-list {
+    flex-direction: row;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 6px;
+  }
+  .si-list > button {
+    border: 1px solid #ece7f2;
+    border-radius: 20px;
+    padding: 9px 13px;
+    white-space: nowrap;
+  }
+  .si-explanation,
+  .trainer-body {
+    padding: 19px 16px 21px;
+  }
+  .flow-diagram {
+    gap: 7px;
+  }
+  .flow-diagram > span {
+    padding: 8px 10px;
+    font-size: 10px;
+  }
+  .stat-tiles {
+    grid-template-columns: 1fr;
+  }
+  .stat-tiles b {
+    font-size: 15px;
+  }
+  .trainer-controls > * {
+    flex: 1 1 100%;
+  }
+}
+
+/* ============ Практикум: шкала выгоды измерения ============ */
+.scale-insight {
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid #eee9f4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.scale-insight > .eyebrow {
+  font-size: 8px;
+  color: #aa95bd;
+  margin-bottom: 3px;
+}
+.scale-insight > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #f6f3fb;
+  border: 1px solid #e9e3f1;
+  border-radius: 6px;
+  padding: 10px 13px;
+}
+.scale-insight > div span {
+  font-size: 10.5px;
+  color: #8e7ea3;
+}
+.scale-insight > div b {
+  font-size: 13px;
+  font-weight: 600;
+  color: #7f5fae;
+  white-space: nowrap;
 }

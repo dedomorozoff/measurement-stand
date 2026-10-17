@@ -32,7 +32,7 @@ test("overview, interactive example, classification and saved progress", async (
   await page.getByRole("button", { name: "Отметить как изученный" }).click();
   await expect(page.getByRole("progressbar")).toHaveAttribute(
     "aria-valuenow",
-    "25",
+    "20",
   );
   await page.reload();
   await expect(
@@ -40,7 +40,7 @@ test("overview, interactive example, classification and saved progress", async (
   ).toBeDisabled();
   await expect(page.getByRole("progressbar")).toHaveAttribute(
     "aria-valuenow",
-    "25",
+    "20",
   );
 });
 
@@ -61,8 +61,66 @@ test("all virtual instruments respond to the scale and properties expand", async
   await page.locator("#instrument-slider").press("End");
   await expect(page.locator(".instrument-slider output")).toHaveText("30 В");
   await page.getByRole("button", { name: /Класс точности/ }).click();
-  await expect(page.locator("#property-3")).toBeVisible();
-  await expect(page.locator("#property-3")).toContainText("±0,45 В");
+  await expect(page.locator("#property-4")).toBeVisible();
+  await expect(page.locator("#property-4")).toContainText("±0,45 В");
+  await page.getByRole("button", { name: /Порог чувствительности/ }).click();
+  await expect(page.locator("#property-3")).toContainText("Наименьшее изменение");
+});
+
+test("measurement means explorer shows flow and examples", async ({ page }) => {
+  await page.goto("/#instruments");
+  await expect(page.locator(".si-explanation h3")).toHaveText("Мера");
+  await expect(page.locator(".flow-diagram")).toContainText("мера");
+  await page.getByRole("tab", { name: /Измерительный преобразователь/ }).click();
+  await expect(page.locator(".si-explanation h3")).toHaveText(
+    "Измерительный преобразователь",
+  );
+  await expect(page.locator(".flow-diagram")).toContainText("термопара");
+  await expect(page.locator(".example-chips")).toContainText("тензодатчик");
+  await page.getByRole("tab", { name: /Измерительная система/ }).click();
+  await expect(page.locator(".si-explanation h3")).toHaveText(
+    "Измерительная система",
+  );
+});
+
+test("voltmeter trainer checks the reading against half a division", async ({
+  page,
+}) => {
+  await page.goto("/#instruments");
+  await page.getByRole("tab", { name: "Вольтметр", exact: true }).click();
+  await page.getByRole("button", { name: /Тренироваться/ }).click();
+  await expect(page.locator(".trainer-task")).toBeVisible();
+  await page.locator(".trainer-controls input").fill("0");
+  await page.getByRole("button", { name: "Ответ", exact: true }).click();
+  await expect(page.locator(".answer-feedback")).toContainText(
+    "больше половины деления",
+  );
+  await expect(page.locator(".stat-tiles")).toContainText("0 / 1");
+});
+
+test("lab experiments count shots and build a normal distribution", async ({
+  page,
+}) => {
+  await page.goto("/#lab");
+  await expect(page.locator(".target-svg")).toBeVisible();
+  await page.getByRole("button", { name: /Серия ×12/ }).click();
+  await expect(page.locator(".experiment-topline")).toContainText("12");
+  await page.getByRole("button", { name: /Случайная/ }).click();
+  await page.getByRole("button", { name: /Отсчёт ×1/ }).click();
+  await expect(page.locator(".experiment-topline")).toContainText("13");
+  await page.getByRole("tab", { name: /Гистограмма/ }).click();
+  await page.getByRole("button", { name: /Серия ×150/ }).click();
+  await page.getByRole("button", { name: /Серия ×150/ }).click();
+  await expect(page.locator(".lab-figures")).toContainText("300");
+  // Среднее 300 случайных отклонений с σ = 1 держится у 100,00 мм.
+  const mean = Number(
+    (await page.locator(".lab-figures > div").nth(1).locator("b").innerText())
+      .replace(",", "."),
+  );
+  expect(mean).toBeGreaterThan(99.8);
+  expect(mean).toBeLessThan(100.2);
+  await page.getByRole("button", { name: "Сбросить серию" }).click();
+  await expect(page.locator(".lab-figures")).toContainText("0");
 });
 
 test("calculators handle decimal commas, zero references and invalid inputs", async ({
@@ -105,6 +163,15 @@ test("calculators handle decimal commas, zero references and invalid inputs", as
   await expect(
     page.getByLabel("Показание прибора", { exact: true }),
   ).toHaveValue("20");
+  await page.getByRole("tab", { name: "Приведённая погрешность" }).click();
+  await calculate.click();
+  await expect(page.locator(".result-numbers")).toContainText("1,5");
+  await expect(page.locator(".result-numbers")).toContainText("±0,45 В");
+  await expect(page.locator(".scale-insight")).toContainText("¼ шкалы");
+  await page.getByLabel("Предельная погрешность").fill("2");
+  await calculate.click();
+  await expect(page.locator(".result-numbers")).toContainText("6,666667");
+  await expect(page.locator(".result-numbers")).not.toContainText("±0,45 В");
 });
 
 test("quiz explains answers, persists result and progress can be reset", async ({
@@ -114,24 +181,25 @@ test("quiz explains answers, persists result and progress can be reset", async (
   await expect(
     page.getByRole("button", { name: "Проверить ответ" }),
   ).toBeDisabled();
-  for (const [index, answer] of [0, 1, 2, 3, 1, 2].entries()) {
+  const answers = [0, 1, 2, 3, 1, 2, 0, 2, 2, 2, 1];
+  for (const [index, answer] of answers.entries()) {
     await page.getByRole("radio").nth(answer).click();
     await page.getByRole("button", { name: "Проверить ответ" }).click();
     await expect(page.locator(".answer-feedback")).toContainText("Верно!");
     await page
       .getByRole("button", {
-        name: index === 5 ? "Завершить тест" : "Следующий вопрос",
+        name: index === answers.length - 1 ? "Завершить тест" : "Следующий вопрос",
       })
       .click();
   }
-  await expect(page.locator(".score-circle strong")).toHaveText("6");
+  await expect(page.locator(".score-circle strong")).toHaveText("11");
   await expect(page.locator(".quiz-result-panel h2")).toHaveText(
     "Точность в ваших руках!",
   );
   await page.reload();
-  await expect(page.locator(".score-circle strong")).toHaveText("6");
+  await expect(page.locator(".score-circle strong")).toHaveText("11");
   await page.getByText("Разобрать правильные ответы").click();
-  await expect(page.locator(".answer-review article")).toHaveCount(6);
+  await expect(page.locator(".answer-review article")).toHaveCount(11);
   await page.getByRole("button", { name: "Помощь по учебному стенду" }).click();
   await page
     .getByRole("button", { name: "Сбросить прогресс изучения" })
@@ -152,6 +220,7 @@ test("reference dialog is keyboard accessible and routes have no runtime errors"
   for (const route of [
     "overview",
     "errors",
+    "lab",
     "instruments",
     "practice",
     "quiz",
@@ -166,7 +235,8 @@ test("reference dialog is keyboard accessible and routes have no runtime errors"
   }
   await page.getByRole("button", { name: "Шпаргалка с формулами" }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.locator(".formula-reference > div")).toHaveCount(5);
+  await expect(page.locator(".formula-reference > div")).toHaveCount(6);
+  await expect(page.locator(".formula-reference")).toContainText("C = −Δx");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
   expect(errors).toEqual([]);
@@ -182,6 +252,7 @@ test.describe("phone layout", () => {
     await page.goto("/");
     for (const name of [
       "Погрешности измерений",
+      "Лаборатория",
       "Средства измерений",
       "Практикум",
       "Проверка знаний",

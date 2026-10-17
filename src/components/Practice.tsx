@@ -18,13 +18,14 @@ import {
 } from "../utils/measurements";
 
 type PracticeProps = { onComplete: () => void };
-type Task = "single" | "series" | "accuracy";
+type Task = "single" | "series" | "accuracy" | "reduced";
 type Result = {
   title: string;
   items: { label: string; value: string; unit: string }[];
   steps: string[];
   note: string;
   series?: number[];
+  scale?: { label: string; relative: string }[];
 };
 
 const tasks: { id: Task; title: string; subtitle: string }[] = [
@@ -43,7 +44,15 @@ const tasks: { id: Task; title: string; subtitle: string }[] = [
     title: "Класс точности",
     subtitle: "Допускаемая погрешность прибора",
   },
+  {
+    id: "reduced",
+    title: "Приведённая погрешность",
+    subtitle: "Подбор класса точности по γ",
+  },
 ];
+
+/** Стандартный ряд классов точности, нормированных приведённой погрешностью. */
+const accuracyClasses = [0.1, 0.2, 0.5, 1.0, 1.5, 2.5, 4.0];
 
 export function QuickExperiment({ onOpen }: { onOpen: () => void }) {
   const [value, setValue] = useState(25.25);
@@ -214,6 +223,8 @@ export default function Practice({ onComplete }: PracticeProps) {
   const [accuracy, setAccuracy] = useState("1,5");
   const [limit, setLimit] = useState("30");
   const [indication, setIndication] = useState("20");
+  const [maxError, setMaxError] = useState("0,45");
+  const [reducedLimit, setReducedLimit] = useState("30");
   const [error, setError] = useState("");
   const [result, setResult] = useState<Result | null>(null);
 
@@ -234,6 +245,8 @@ export default function Practice({ onComplete }: PracticeProps) {
     setAccuracy("1,5");
     setLimit("30");
     setIndication("20");
+    setMaxError("0,45");
+    setReducedLimit("30");
     invalidate();
   }
 
@@ -247,6 +260,10 @@ export default function Practice({ onComplete }: PracticeProps) {
       setAccuracy("");
       setLimit("");
       setIndication("");
+    }
+    if (task === "reduced") {
+      setMaxError("");
+      setReducedLimit("");
     }
     invalidate();
   }
@@ -330,6 +347,68 @@ export default function Practice({ onComplete }: PracticeProps) {
         note: "Стандартная ошибка среднего описывает случайный разброс при независимых измерениях. Это не полная погрешность и не доверительный интервал; систематические составляющие здесь не учтены.",
         series: values,
       });
+    } else if (task === "reduced") {
+      const errorLimit = parseNumber(maxError);
+      const range = parseNumber(reducedLimit);
+      if (
+        errorLimit === null ||
+        range === null ||
+        errorLimit < 0 ||
+        range <= 0
+      ) {
+        setError(
+          "Предельная погрешность должна быть неотрицательной, нормирующее значение - больше нуля. Десятичный знак: точка или запятая.",
+        );
+        return;
+      }
+      const reduced = (errorLimit / range) * 100;
+      // Класс подбираем с допуском: 0,45 / 30 × 100 даёт 1,5000000000000002 из-за
+      // двоичного представления, и строгое сравнение пропустило бы класс 1,5.
+      const matched =
+        accuracyClasses.find((item) => item >= reduced - 1e-9) ?? null;
+      const allowed = matched === null ? null : (matched * range) / 100;
+      const scale =
+        matched === null
+          ? undefined
+          : [
+              { factor: 0.25, label: "¼ шкалы" },
+              { factor: 0.5, label: "½ шкалы" },
+              { factor: 1, label: "полная шкала" },
+            ].map((point) => ({
+              label: `${point.label} - ${formatNumber(point.factor * range)} В`,
+              relative: `±${formatNumber((allowed! / (point.factor * range)) * 100)}%`,
+            }));
+      setResult({
+        title: "Класс точности подобран",
+        items: [
+          {
+            label: "Приведённая |γ|",
+            value: `${formatNumber(reduced, 6)}`,
+            unit: "%",
+          },
+          {
+            label: "Класс точности",
+            value: matched === null ? "> 4" : formatNumber(matched),
+            unit: "",
+          },
+          {
+            label: "Допуск по классу",
+            value: allowed === null ? "Вне ряда" : `±${formatNumber(allowed, 6)}`,
+            unit: allowed === null ? "" : "В",
+          },
+        ],
+        steps: [
+          `|γ| = |Δmax| / XN × 100% = ${formatNumber(errorLimit)} / ${formatNumber(range)} × 100% = ${formatNumber(reduced)}%`,
+          matched === null
+            ? "Полученное значение больше 4%: класс по стандартному ряду не подбирается."
+            : `Ближайший больший класс из ряда 0,1 | 0,2 | 0,5 | 1,0 | 1,5 | 2,5 | 4,0 - это ${formatNumber(matched)}.`,
+          allowed === null
+            ? ""
+            : `Δдоп = ±${formatNumber(allowed)} В по классу ${formatNumber(matched ?? 0)} при XN = ${formatNumber(range)} В`,
+        ].filter(Boolean),
+        note: "Класс подбирают по приведённой погрешности: он показывает долю погрешности от нормирующего значения, а не от текущего показания.",
+        scale,
+      });
     } else {
       const k = parseNumber(accuracy);
       const range = parseNumber(limit);
@@ -383,7 +462,7 @@ export default function Practice({ onComplete }: PracticeProps) {
   return (
     <div className="learning-page">
       <div className="page-heading">
-        <span className="eyebrow">03 / ПРИМЕНЯЕМ ЗНАНИЯ</span>
+        <span className="eyebrow">04 / ПРИМЕНЯЕМ ЗНАНИЯ</span>
         <h1>Практикум</h1>
         <p>
           Переходите от формул к результатам. Введите свои данные или начните с
@@ -531,7 +610,47 @@ export default function Practice({ onComplete }: PracticeProps) {
               </div>
             </>
           )}
-          {task !== "accuracy" && (
+          {task === "reduced" && (
+            <>
+              <label className="field-label" htmlFor="max-error">
+                Предельная погрешность <span>Δmax</span>
+              </label>
+              <div className="input-with-unit">
+                <input
+                  id="max-error"
+                  inputMode="decimal"
+                  placeholder="Например, 0,45"
+                  value={maxError}
+                  onChange={(event) => {
+                    setMaxError(event.target.value);
+                    invalidate();
+                  }}
+                />
+                <span>В</span>
+              </div>
+              <label className="field-label" htmlFor="reduced-limit">
+                Нормирующее значение <span>XN</span>
+              </label>
+              <div className="input-with-unit">
+                <input
+                  id="reduced-limit"
+                  inputMode="decimal"
+                  placeholder="Например, 30"
+                  value={reducedLimit}
+                  onChange={(event) => {
+                    setReducedLimit(event.target.value);
+                    invalidate();
+                  }}
+                />
+                <span>В</span>
+              </div>
+              <span className="field-help">
+                Найдём приведённую погрешность и ближайший класс точности из
+                стандартного ряда.
+              </span>
+            </>
+          )}
+          {task !== "accuracy" && task !== "reduced" && (
             <div className="unit-select">
               <label htmlFor="measurement-unit">Единицы измерения</label>
               <select
@@ -591,6 +710,17 @@ export default function Practice({ onComplete }: PracticeProps) {
                   ))}
                 </div>
                 {result.series && <SeriesPlot values={result.series} />}
+                {result.scale && (
+                  <div className="scale-insight">
+                    <span className="eyebrow">ГДЕ ВЫГОДНО МЕРИТЬ</span>
+                    {result.scale.map((point) => (
+                      <div key={point.label}>
+                        <span>{point.label}</span>
+                        <b>{point.relative}</b>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <div className="solution-steps">
                   <span className="eyebrow">ХОД РЕШЕНИЯ</span>
                   {result.steps.map((step, index) => (

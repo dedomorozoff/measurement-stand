@@ -15,21 +15,29 @@ import {
   MoveUpRight,
   Play,
   RotateCcw,
+  Sliders,
+  Target,
   X,
 } from "lucide-react";
 import {
   classifications,
   instruments,
+  measurementMeans,
   modules,
   navigation,
   properties,
+  questions,
 } from "./data";
 import type { ErrorKind, LearningSection, Section } from "./data";
+import GaussExperiment from "./components/GaussExperiment";
+import GaugeTrainer from "./components/GaugeTrainer";
 import InstrumentVisual from "./components/InstrumentVisual";
 import Practice, { QuickExperiment } from "./components/Practice";
 import Quiz from "./components/Quiz";
+import TargetExperiment from "./components/TargetExperiment";
 import { formatNumber } from "./utils/measurements";
 import { handleChoiceKeys } from "./utils/keyboard";
+import { plural } from "./utils/plural";
 
 type Progress = { completed: LearningSection[]; quizScore: number | null };
 const storageKey = "metrika-learning-v1";
@@ -50,7 +58,7 @@ function loadProgress(): Progress {
       quizScore:
         Number.isInteger(stored.quizScore) &&
         stored.quizScore >= 0 &&
-        stored.quizScore <= 6
+        stored.quizScore <= questions.length
           ? stored.quizScore
           : null,
     };
@@ -193,7 +201,9 @@ function Overview({
             <h2 id="route-heading">Ваш маршрут изучения</h2>
           </div>
           <span className="route-note">
-            Четыре шага к точному результату <ArrowDown size={15} />
+            {modules.length}{" "}
+            {plural(modules.length, ["шаг", "шага", "шагов"])} к точному
+            результату <ArrowDown size={15} />
           </span>
         </div>
         <div className="module-grid">
@@ -229,7 +239,9 @@ function Overview({
                     ? "Проверить себя"
                     : item.id === "practice"
                       ? "Попробовать"
-                      : "Изучить раздел"}{" "}
+                      : item.id === "lab"
+                        ? "Провести опыт"
+                        : "Изучить раздел"}{" "}
                 <MoveUpRight size={14} />
               </span>
             </motion.button>
@@ -549,6 +561,93 @@ function ErrorsPage({
   );
 }
 
+function LabPage({
+  completed,
+  onComplete,
+  onNext,
+}: {
+  completed: boolean;
+  onComplete: () => void;
+  onNext: () => void;
+}) {
+  const [experiment, setExperiment] = useState(0);
+  const experiments = [
+    {
+      id: "target",
+      title: "Мишень истинного значения",
+      hint: "систематическая, случайная, грубая",
+    },
+    { id: "gauss", title: "Гистограмма разброса", hint: "закон больших чисел" },
+  ];
+  return (
+    <div className="learning-page">
+      <div className="page-heading">
+        <span className="eyebrow">02 / ЛАБОРАТОРНЫЕ ОПЫТЫ</span>
+        <h1>Лаборатория погрешностей</h1>
+        <p>
+          Два опыта, в которых погрешность видна буквально: попадания в мишень и
+          форма распределения отклонений. Меняйте вид погрешности и наблюдайте,
+          как меняется картина и её численная оценка.
+        </p>
+      </div>
+      <div className="theory-definition">
+        <Info size={20} />
+        <p>
+          <strong>Один объект - много измерений.</strong> Расхождение результатов
+          повторных измерений называется <strong>рассеиванием</strong>. Оно
+          складывается из постоянного смещения и случайного разброса.
+        </p>
+      </div>
+      <div
+        className="tab-list lab-tabs"
+        role="tablist"
+        aria-label="Лабораторные опыты"
+        onKeyDown={handleChoiceKeys}
+      >
+        {experiments.map((item, index) => (
+          <button
+            key={item.id}
+            role="tab"
+            id={`lab-${item.id}`}
+            aria-controls="lab-panel"
+            aria-selected={index === experiment}
+            tabIndex={index === experiment ? 0 : -1}
+            className={index === experiment ? "active" : ""}
+            onClick={() => setExperiment(index)}
+          >
+            {item.title}
+            <small>{item.hint}</small>
+          </button>
+        ))}
+      </div>
+      <div
+        className="lab-panel"
+        id="lab-panel"
+        role="tabpanel"
+        aria-labelledby={`lab-${experiments[experiment].id}`}
+      >
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={experiment}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+          >
+            {experiment === 0 ? <TargetExperiment /> : <GaussExperiment />}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+      <SectionComplete
+        completed={completed}
+        onComplete={onComplete}
+        onNext={onNext}
+        nextLabel="К средствам измерений"
+      />
+    </div>
+  );
+}
+
 function InstrumentsPage({
   completed,
   onComplete,
@@ -561,17 +660,95 @@ function InstrumentsPage({
   const [instrumentIndex, setInstrumentIndex] = useState(0);
   const [value, setValue] = useState(instruments[0].defaultValue);
   const [expanded, setExpanded] = useState<number | null>(0);
+  const [meanIndex, setMeanIndex] = useState(0);
   const instrument = instruments[instrumentIndex];
+  const mean = measurementMeans[meanIndex];
+  const rollTask = () =>
+    Math.round(
+      (Math.random() * 0.7 + 0.15) * instrument.max * 2,
+    ) / 2;
+  const [trainerMode, setTrainerMode] = useState(false);
+  const [task, setTask] = useState(rollTask);
+  const shownValue = trainerMode ? task : value;
+  const startTrainer = () => {
+    setTask(rollTask());
+    setTrainerMode(true);
+  };
   return (
     <div className="learning-page">
       <div className="page-heading">
-        <span className="eyebrow">02 / ЗНАКОМИМСЯ С ИНСТРУМЕНТАМИ</span>
+        <span className="eyebrow">03 / ЗНАКОМИМСЯ С ИНСТРУМЕНТАМИ</span>
         <h1>Средства измерений</h1>
         <p>
           Средства измерений - технические средства с нормированными
-          метрологическими характеристиками. Исследуйте приборы, их шкалы и
-          свойства.
+          метрологическими характеристиками. Разберёмте пять видов, исследуем
+          приборы, их шкалы и свойства.
         </p>
+      </div>
+      <div className="theory-definition">
+        <Info size={20} />
+        <p>
+          <strong>Пять видов средств измерений.</strong> Гиря, термопара,
+          вольтметр, поверочный стенд и АСУ - это всё средства измерений, но
+          разной сложности и роли в процессе.
+        </p>
+      </div>
+      <div
+        className="si-workbench"
+        role="tablist"
+        aria-label="Виды средств измерений"
+        onKeyDown={handleChoiceKeys}
+      >
+        <div className="si-list">
+          {measurementMeans.map((item, index) => (
+            <button
+              key={item.id}
+              role="tab"
+              id={`si-${item.id}`}
+              aria-controls="si-panel"
+              aria-selected={index === meanIndex}
+              tabIndex={index === meanIndex ? 0 : -1}
+              className={index === meanIndex ? "active" : ""}
+              onClick={() => setMeanIndex(index)}
+            >
+              <span className="property-number">
+                {String(index + 1).padStart(2, "0")}
+              </span>
+              {item.name}
+            </button>
+          ))}
+        </div>
+        <div
+          className="si-explanation"
+          id="si-panel"
+          role="tabpanel"
+          aria-labelledby={`si-${mean.id}`}
+        >
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={mean.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+            >
+              <h3>{mean.name}</h3>
+              <p className="kind-description">{mean.definition}</p>
+              <div className="flow-diagram">
+                <span>{mean.flow.input}</span>
+                <ArrowRight size={15} />
+                <span className="device">{mean.flow.device}</span>
+                <ArrowRight size={15} />
+                <span className="output">{mean.flow.output}</span>
+              </div>
+              <div className="example-chips">
+                {mean.examples.map((example) => (
+                  <span key={example}>{example}</span>
+                ))}
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
       </div>
       <div
         className="tab-list instrument-tabs"
@@ -591,6 +768,7 @@ function InstrumentsPage({
             onClick={() => {
               setInstrumentIndex(index);
               setValue(item.defaultValue);
+              setTrainerMode(false);
             }}
           >
             {item.id === "caliper"
@@ -628,35 +806,59 @@ function InstrumentsPage({
             >
               <InstrumentVisual
                 type={instrument.id}
-                value={value}
+                value={shownValue}
                 max={instrument.max}
                 unit={instrument.unit}
+                band={
+                  instrument.id === "voltmeter" ? instrument.allowedError : 0
+                }
               />
             </motion.div>
           </AnimatePresence>
           <div className="instrument-slider">
-            <div>
-              <label htmlFor="instrument-slider">Измените показание</label>
-              <output htmlFor="instrument-slider">
-                {formatNumber(value, 2)} <small>{instrument.unit}</small>
-              </output>
-            </div>
-            <input
-              className="range-input"
-              id="instrument-slider"
-              type="range"
-              min="0"
-              max={instrument.max}
-              step={instrument.step}
-              value={value}
-              onChange={(event) => setValue(Number(event.target.value))}
-            />
-            <div className="range-endpoints">
-              <span>0 {instrument.unit}</span>
-              <span>
-                {instrument.max} {instrument.unit}
-              </span>
-            </div>
+            {trainerMode ? (
+              <div className="trainer-switch">
+                <span className="live-label">
+                  <i /> Режим тренажёра
+                </span>
+                <button
+                  className="secondary-button"
+                  onClick={() => setTrainerMode(false)}
+                >
+                  <Sliders size={15} /> Вернуться к шкале
+                </button>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <label htmlFor="instrument-slider">Измените показание</label>
+                  <output htmlFor="instrument-slider">
+                    {formatNumber(value, 2)} <small>{instrument.unit}</small>
+                  </output>
+                </div>
+                <input
+                  className="range-input"
+                  id="instrument-slider"
+                  type="range"
+                  min="0"
+                  max={instrument.max}
+                  step={instrument.step}
+                  value={value}
+                  onChange={(event) => setValue(Number(event.target.value))}
+                />
+                <div className="range-endpoints">
+                  <span>0 {instrument.unit}</span>
+                  <span>
+                    {instrument.max} {instrument.unit}
+                  </span>
+                </div>
+                {instrument.id === "voltmeter" && (
+                  <button className="trainer-start" onClick={startTrainer}>
+                    <Target size={15} /> Тренироваться: снять показание
+                  </button>
+                )}
+              </>
+            )}
           </div>
         </div>
         <aside className="instrument-specs">
@@ -685,6 +887,13 @@ function InstrumentsPage({
               </dt>
               <dd>{instrument.accuracy}</dd>
             </div>
+            <div>
+              <dt>Предел погрешности Δдоп</dt>
+              <dd>
+                ±{formatNumber(instrument.allowedError, 3)}{" "}
+                <small>{instrument.unit}</small>
+              </dd>
+            </div>
           </dl>
           <p className="spec-note">
             <Info size={15} />
@@ -695,6 +904,14 @@ function InstrumentsPage({
           </p>
         </aside>
       </div>
+      {instrument.id === "voltmeter" && trainerMode && (
+        <GaugeTrainer
+          task={task}
+          resolution={1}
+          max={instrument.max}
+          onNewTask={() => setTask(rollTask())}
+        />
+      )}
       <section className="properties-section">
         <div className="section-title-row">
           <div>
@@ -833,6 +1050,11 @@ function ReferenceDialog({
                   formula: "Δдоп = ±k × XN / 100",
                   note: "Только для класса, нормированного приведённой погрешностью и обозначенного простой цифрой.",
                 },
+                {
+                  name: "Поправка",
+                  formula: "C = −Δx",
+                  note: "Число, которое нужно прибавить к результату, чтобы приблизиться к опорному значению. Знак всегда противоположен погрешности.",
+                },
               ].map((item) => (
                 <div key={item.name}>
                   <h3>{item.name}</h3>
@@ -914,7 +1136,9 @@ export default function App() {
   const [dialog, setDialog] = useState<"formulas" | "help" | null>(null);
   const [quizKey, setQuizKey] = useState(0);
   const current = navigation.find((item) => item.id === section)!;
-  const percentage = progress.completed.length * 25;
+  const percentage = Math.round(
+    (progress.completed.length / modules.length) * 100,
+  );
 
   useEffect(() => {
     try {
@@ -1065,7 +1289,9 @@ export default function App() {
                   transition={{ duration: 0.7 }}
                 />
               </div>
-              <p>{progress.completed.length} из 4 разделов изучено</p>
+              <p>
+                {progress.completed.length} из {modules.length} разделов изучено
+              </p>
             </div>
             <button
               className="sidebar-help"
@@ -1132,6 +1358,13 @@ export default function App() {
                   <ErrorsPage
                     completed={progress.completed.includes("errors")}
                     onComplete={() => complete("errors")}
+                    onNext={() => navigate("instruments")}
+                  />
+                )}
+                {section === "lab" && (
+                  <LabPage
+                    completed={progress.completed.includes("lab")}
+                    onComplete={() => complete("lab")}
                     onNext={() => navigate("instruments")}
                   />
                 )}
