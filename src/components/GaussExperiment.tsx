@@ -28,6 +28,38 @@ function prefersReducedMotion() {
   );
 }
 
+/** Цвета берём из CSS-переменных, чтобы гистограмма следовала за темой. */
+function themeColors(element: Element) {
+  const styles = getComputedStyle(element);
+  const read = (name: string) => styles.getPropertyValue(name).trim();
+  const withAlpha = (hex: string, alpha: number) => {
+    const clean = hex.replace("#", "");
+    const full =
+      clean.length === 3
+        ? clean
+            .split("")
+            .map((c) => c + c)
+            .join("")
+        : clean;
+    const value = parseInt(full, 16);
+    if (Number.isNaN(value)) return hex;
+    return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${
+      value & 255
+    }, ${alpha})`;
+  };
+  const accent = read("--accent");
+  return {
+    grid: read("--viz-axis"),
+    label: read("--viz-label"),
+    accent,
+    curve: read("--warm"),
+    barFill: withAlpha(accent, 0.22),
+    barTop: withAlpha(accent, 0.9),
+    zero: withAlpha(accent, 0.45),
+    falling: (alpha: number) => withAlpha(accent, alpha),
+  };
+}
+
 export default function GaussExperiment() {
   const samplesRef = useRef<number[]>([]);
   const dispRef = useRef<Float64Array>(new Float64Array(BINS));
@@ -71,6 +103,16 @@ export default function GaussExperiment() {
     const ctx = canvas.getContext("2d")!;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const reduced = prefersReducedMotion();
+    let colors = themeColors(canvas);
+    const recolor = () => {
+      colors = themeColors(canvas);
+    };
+    // Пересчитываем цвета при смене темы: canvas не наследует CSS-переменные.
+    const themeObserver = new MutationObserver(recolor);
+    themeObserver.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
 
     const observer = new ResizeObserver(() => {
       if (!wrapRef.current) return;
@@ -119,7 +161,7 @@ export default function GaussExperiment() {
       const y = (count: number) => padT + plotHeight - (count / yMax) * plotHeight;
       const x = (index: number) => padL + index * binWidth;
 
-      ctx.strokeStyle = "#ece7f2";
+      ctx.strokeStyle = colors.grid;
       ctx.lineWidth = 1;
       for (let g = 0; g <= 4; g++) {
         const yy = padT + (plotHeight * g) / 4;
@@ -127,7 +169,7 @@ export default function GaussExperiment() {
         ctx.moveTo(padL, yy);
         ctx.lineTo(canvasWidth - padR, yy);
         ctx.stroke();
-        ctx.fillStyle = "#a89ab5";
+        ctx.fillStyle = colors.label;
         ctx.font = "10px Manrope, sans-serif";
         ctx.textAlign = "right";
         ctx.fillText(String(Math.round(yMax * (1 - g / 4))), padL - 7, yy + 4);
@@ -136,7 +178,7 @@ export default function GaussExperiment() {
       ctx.textAlign = "center";
       [-RANGE, 0, RANGE].forEach((delta) => {
         const xx = padL + ((delta + RANGE) / (2 * RANGE)) * plotWidth;
-        ctx.fillStyle = delta === 0 ? "#8864cb" : "#a89ab5";
+        ctx.fillStyle = delta === 0 ? colors.accent : colors.label;
         ctx.fillText(
           delta === 0 ? "Xист" : `${delta > 0 ? "+" : ""}${delta}`,
           xx,
@@ -147,15 +189,15 @@ export default function GaussExperiment() {
       for (let i = 0; i < BINS; i++) {
         const height = padT + plotHeight - y(disp[i]);
         if (height < 0.5) continue;
-        ctx.fillStyle = "rgba(137,103,204,0.2)";
+        ctx.fillStyle = colors.barFill;
         ctx.fillRect(x(i) + 1, y(disp[i]), binWidth - 2, height);
-        ctx.fillStyle = "rgba(137,103,204,0.9)";
+        ctx.fillStyle = colors.barTop;
         ctx.fillRect(x(i) + 1, y(disp[i]), binWidth - 2, 2);
       }
 
       if (n > 4) {
         ctx.beginPath();
-        ctx.strokeStyle = "#c98f6b";
+        ctx.strokeStyle = colors.curve;
         ctx.lineWidth = 1.8;
         for (let px = 0; px <= plotWidth; px += 2) {
           const value = (px / plotWidth) * 2 * RANGE - RANGE;
@@ -182,12 +224,12 @@ export default function GaussExperiment() {
           const yy = padT + (y(disp[fall.bin]) - 8 - padT) * ease;
           ctx.beginPath();
           ctx.arc(xx, yy, 3.2, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(137,103,204,${1.05 - fall.t * 0.85})`;
+          ctx.fillStyle = colors.falling(1.05 - fall.t * 0.85);
           ctx.fill();
         }
       }
 
-      ctx.strokeStyle = "rgba(136,100,203,0.45)";
+      ctx.strokeStyle = colors.zero;
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
       ctx.moveTo(padL + plotWidth / 2, padT);
@@ -201,6 +243,7 @@ export default function GaussExperiment() {
     return () => {
       cancelAnimationFrame(frame);
       observer.disconnect();
+      themeObserver.disconnect();
     };
   }, [sigma]);
 

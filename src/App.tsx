@@ -12,10 +12,12 @@ import {
   Info,
   Lightbulb,
   Menu,
+  Moon,
   MoveUpRight,
   Play,
   RotateCcw,
   Sliders,
+  Sun,
   Target,
   X,
 } from "lucide-react";
@@ -41,7 +43,14 @@ import { plural } from "./utils/plural";
 
 type Progress = { completed: LearningSection[]; quizScore: number | null };
 const storageKey = "metrika-learning-v1";
+const themeKey = "metrika-theme";
+type Theme = "light" | "dark";
 const emptyProgress: Progress = { completed: [], quizScore: null };
+
+/** Тему выставляет скрипт в index.html до первой отрисовки. */
+function getTheme(): Theme {
+  return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+}
 
 function loadProgress(): Progress {
   try {
@@ -286,23 +295,23 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
           height="20"
           patternUnits="userSpaceOnUse"
         >
-          <circle cx="1" cy="1" r=".7" fill="#e0dee8" />
+          <circle cx="1" cy="1" r=".7" fill="var(--viz-grid)" />
         </pattern>
       </defs>
       <rect width="600" height="190" fill="url(#plot-dots)" />
       {isSeries ? (
         <>
-          <line x1="45" y1="150" x2="555" y2="150" stroke="#d5d3de" />
-          <line x1="45" y1="25" x2="45" y2="150" stroke="#d5d3de" />
+          <line x1="45" y1="150" x2="555" y2="150" stroke="var(--viz-axis)" />
+          <line x1="45" y1="25" x2="45" y2="150" stroke="var(--viz-axis)" />
           <line
             x1="45"
             y1="105"
             x2="555"
             y2="105"
-            stroke="#94ad9e"
+            stroke="var(--ok)"
             strokeDasharray="5 5"
           />
-          <text x="551" y="96" textAnchor="end" fontSize="10" fill="#8aa192">
+          <text x="551" y="96" textAnchor="end" fontSize="10" fill="var(--ok)">
             Опорное значение
           </text>
           <motion.polyline
@@ -311,7 +320,7 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
               .map((y, index) => `${90 + index * 82},${y}`)
               .join(" ")}
             fill="none"
-            stroke="#b8a4dc"
+            stroke="var(--accent-soft)"
             strokeWidth="1.5"
             initial={{ pathLength: 0 }}
             animate={{ pathLength: 1 }}
@@ -323,7 +332,7 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
                 cx={90 + index * 82}
                 cy={y}
                 r="5"
-                fill={mode === "gross" && index === 3 ? "#d99583" : "#8b68cc"}
+                fill={mode === "gross" && index === 3 ? "var(--bad)" : "var(--accent)"}
                 stroke="white"
                 strokeWidth="2"
               />
@@ -332,29 +341,29 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
                 y="169"
                 textAnchor="middle"
                 fontSize="10"
-                fill="#a2a0ac"
+                fill="var(--viz-label)"
               >
                 {index + 1}
               </text>
             </g>
           ))}
-          <text x="300" y="188" textAnchor="middle" fontSize="9" fill="#a2a0ac">
+          <text x="300" y="188" textAnchor="middle" fontSize="9" fill="var(--viz-label)">
             НОМЕР ИЗМЕРЕНИЯ
           </text>
         </>
       ) : mode === "reduced" ? (
         <>
-          <text x="300" y="43" textAnchor="middle" fontSize="14" fill="#8967c7">
+          <text x="300" y="43" textAnchor="middle" fontSize="14" fill="var(--accent)">
             |γ| = 0,45 / 30 × 100% = 1,5%
           </text>
-          <rect x="65" y="84" width="470" height="18" rx="4" fill="#e7e1ef" />
-          <rect x="65" y="84" width="7.05" height="18" rx="2" fill="#9b79ce" />
-          <line x1="65" y1="75" x2="65" y2="114" stroke="#a995c3" />
-          <line x1="535" y1="75" x2="535" y2="114" stroke="#a995c3" />
-          <text x="65" y="135" fontSize="11" fill="#9b88b0">
+          <rect x="65" y="84" width="470" height="18" rx="4" fill="var(--viz-band)" />
+          <rect x="65" y="84" width="7.05" height="18" rx="2" fill="var(--viz-band-fill)" />
+          <line x1="65" y1="75" x2="65" y2="114" stroke="var(--viz-band-fill)" />
+          <line x1="535" y1="75" x2="535" y2="114" stroke="var(--viz-band-fill)" />
+          <text x="65" y="135" fontSize="11" fill="var(--viz-label)">
             0 В
           </text>
-          <text x="535" y="135" textAnchor="end" fontSize="11" fill="#9b88b0">
+          <text x="535" y="135" textAnchor="end" fontSize="11" fill="var(--viz-label)">
             XN = 30 В
           </text>
           <text
@@ -362,7 +371,7 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
             y="170"
             textAnchor="middle"
             fontSize="11"
-            fill="#a092af"
+            fill="var(--viz-label)"
           >
             Полоса: 30 В. Выделенная часть: погрешность 0,45 В.
           </text>
@@ -374,7 +383,7 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
             y1="116"
             x2="535"
             y2="116"
-            stroke="#d7d4e1"
+            stroke="var(--viz-axis)"
             strokeWidth="2"
           />
           {Array.from({ length: 31 }, (_, i) => (
@@ -384,7 +393,7 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
               y1="116"
               x2={65 + i * 15.66}
               y2={i % 5 === 0 ? 129 : 122}
-              stroke="#d0cbdc"
+              stroke="var(--viz-axis)"
             />
           ))}
           <line
@@ -392,10 +401,10 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
             y1="55"
             x2="255"
             y2="138"
-            stroke="#96aa9b"
+            stroke="var(--ok)"
             strokeDasharray="4 4"
           />
-          <text x="247" y="159" textAnchor="end" fontSize="11" fill="#88968a">
+          <text x="247" y="159" textAnchor="end" fontSize="11" fill="var(--ok)">
             xоп = 25,00 мм
           </text>
           <line
@@ -403,20 +412,20 @@ function ErrorPlot({ mode }: { mode: ErrorKind["plot"] }) {
             y1="67"
             x2="375"
             y2="138"
-            stroke="#8d69cf"
+            stroke="var(--accent)"
             strokeWidth="2"
           />
-          <circle cx="375" cy="111" r="5" fill="#8d69cf" />
-          <text x="383" y="159" fontSize="11" fill="#8967c7">
+          <circle cx="375" cy="111" r="5" fill="var(--accent)" />
+          <text x="383" y="159" fontSize="11" fill="var(--accent)">
             xизм = 25,40 мм
           </text>
           <path
             d="M260 69 L370 69 M265 65 L259 69 L265 73 M365 65 L371 69 L365 73"
             fill="none"
-            stroke="#8d69cf"
+            stroke="var(--accent)"
             strokeWidth="1.5"
           />
-          <text x="315" y="51" textAnchor="middle" fontSize="13" fill="#8967c7">
+          <text x="315" y="51" textAnchor="middle" fontSize="13" fill="var(--accent)">
             {mode === "relative" ? "|δ| = 1,6%" : "Δx = +0,40 мм"}
           </text>
         </>
@@ -1135,6 +1144,7 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dialog, setDialog] = useState<"formulas" | "help" | null>(null);
   const [quizKey, setQuizKey] = useState(0);
+  const [theme, setTheme] = useState<Theme>(getTheme);
   const current = navigation.find((item) => item.id === section)!;
   const percentage = Math.round(
     (progress.completed.length / modules.length) * 100,
@@ -1147,6 +1157,17 @@ export default function App() {
       /* The stand also works when browser storage is unavailable. */
     }
   }, [progress]);
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute("content", theme === "dark" ? "#121116" : "#f8f9fb");
+    try {
+      localStorage.setItem(themeKey, theme);
+    } catch {
+      /* Тема не сохранится, но применится. */
+    }
+  }, [theme]);
   useEffect(() => {
     const handleHistory = () => {
       setSection(getSection());
@@ -1327,6 +1348,34 @@ export default function App() {
               >
                 <BookOpen size={17} />
                 <span>Шпаргалка с формулами</span>
+              </button>
+              <span className="topbar-divider" />
+              <button
+                className="icon-button theme-toggle"
+                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                aria-label={
+                  theme === "dark" ? "Включить светлую тему" : "Включить тёмную тему"
+                }
+                aria-pressed={theme === "dark"}
+                title={
+                  theme === "dark" ? "Светлая тема" : "Тёмная тема"
+                }
+              >
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.span
+                    key={theme}
+                    initial={{ opacity: 0, rotate: -40, scale: 0.7 }}
+                    animate={{ opacity: 1, rotate: 0, scale: 1 }}
+                    exit={{ opacity: 0, rotate: 40, scale: 0.7 }}
+                    transition={{ duration: 0.18 }}
+                  >
+                    {theme === "dark" ? (
+                      <Sun size={20} strokeWidth={1.6} />
+                    ) : (
+                      <Moon size={20} strokeWidth={1.6} />
+                    )}
+                  </motion.span>
+                </AnimatePresence>
               </button>
               <span className="topbar-divider" />
               <button

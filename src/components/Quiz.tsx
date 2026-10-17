@@ -70,7 +70,7 @@ export default function Quiz({ savedScore, onComplete, onTheory }: Props) {
                 cy="80"
                 r="68"
                 fill="none"
-                stroke="#eeebf5"
+                stroke="var(--surface-sunken)"
                 strokeWidth="7"
               />
               <motion.circle
@@ -78,7 +78,7 @@ export default function Quiz({ savedScore, onComplete, onTheory }: Props) {
                 cy="80"
                 r="68"
                 fill="none"
-                stroke="#8966ce"
+                stroke="var(--accent)"
                 strokeWidth="7"
                 strokeLinecap="round"
                 strokeDasharray={427.26}

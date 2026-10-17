@@ -242,6 +242,28 @@ test("reference dialog is keyboard accessible and routes have no runtime errors"
   expect(errors).toEqual([]);
 });
 
+test("theme switches between light and dark and survives a reload", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  const toggle = page.getByRole("button", { name: "Включить тёмную тему" });
+  await toggle.click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  // Тёмная тема должна реально менять фон, а не только атрибут.
+  await expect(page.locator("html")).toHaveCSS(
+    "background-color",
+    "rgb(18, 17, 22)",
+  );
+  await expect(page.getByRole("button", { name: "Включить светлую тему" })).toBeVisible();
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await page.getByRole("button", { name: "Включить светлую тему" }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+});
+
 test.describe("phone layout", () => {
   test.use({
     viewport: { width: 390, height: 844 },

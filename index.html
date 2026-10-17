@@ -10,6 +10,22 @@
     />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>Метрика. Погрешности и средства измерений</title>
+    <script>
+      // Тему задаём до первой отрисовки, иначе при тёмной теме мигнёт светлый фон.
+      (function () {
+        try {
+          var saved = localStorage.getItem("metrika-theme");
+          var theme =
+            saved ||
+            (window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light");
+          document.documentElement.dataset.theme = theme;
+        } catch (error) {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

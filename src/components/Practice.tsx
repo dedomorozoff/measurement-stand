@@ -91,7 +91,7 @@ export function QuickExperiment({ onOpen }: { onOpen: () => void }) {
           role="img"
           aria-label={`Отклонение от 25 мм: ${formatSigned(delta, 2)} мм`}
         >
-          <line x1="15" y1="48" x2="545" y2="48" stroke="#dddfe8" />
+          <line x1="15" y1="48" x2="545" y2="48" stroke="var(--viz-axis)" />
           {Array.from({ length: 51 }, (_, i) => (
             <g key={i}>
               <line
@@ -99,7 +99,7 @@ export function QuickExperiment({ onOpen }: { onOpen: () => void }) {
                 y1={i % 10 === 0 ? 23 : i % 5 === 0 ? 31 : 37}
                 x2={15 + i * 10.6}
                 y2="48"
-                stroke={i === 25 ? "#8a69cc" : "#c1c4cf"}
+                stroke={i === 25 ? "var(--accent)" : "var(--viz-axis)"}
                 strokeWidth={i === 25 ? 2 : 1}
               />
               {i % 10 === 0 && (
@@ -108,7 +108,7 @@ export function QuickExperiment({ onOpen }: { onOpen: () => void }) {
                   y="71"
                   textAnchor="middle"
                   fontSize="10"
-                  fill="#9598a5"
+                  fill="var(--viz-label)"
                 >
                   {(24.5 + i / 50).toFixed(1).replace(".", ",")}
                 </text>
@@ -120,15 +120,15 @@ export function QuickExperiment({ onOpen }: { onOpen: () => void }) {
             y1="15"
             x2="280"
             y2="53"
-            stroke="#b7a3df"
+            stroke="var(--accent-soft)"
             strokeDasharray="3 3"
           />
           <motion.g
             animate={{ x: 15 + (value - 24.5) * 530 }}
             transition={{ type: "spring", stiffness: 230, damping: 28 }}
           >
-            <path d="M-5 13 L0 21 L5 13 Z" fill="#8b69cf" />
-            <line y1="22" y2="52" stroke="#8b69cf" strokeWidth="2" />
+            <path d="M-5 13 L0 21 L5 13 Z" fill="var(--accent)" />
+            <line y1="22" y2="52" stroke="var(--accent)" strokeWidth="2" />
           </motion.g>
         </svg>
         <label className="sr-only" htmlFor="quick-measurement">
@@ -182,16 +182,16 @@ function SeriesPlot({ values }: { values: number[] }) {
         y1="95"
         x2="480"
         y2="95"
-        stroke="#b5a1db"
+        stroke="var(--line-strong)"
         strokeDasharray="5 5"
       />
-      <text x="475" y="86" textAnchor="end" fontSize="10" fill="#9b84c6">
+      <text x="475" y="86" textAnchor="end" fontSize="10" fill="var(--accent-soft)">
         среднее: {formatNumber(mean)}
       </text>
       <polyline
         points={points.map((point) => `${point.x},${point.y}`).join(" ")}
         fill="none"
-        stroke="#b7a2df"
+        stroke="var(--line-strong)"
         strokeWidth="1.5"
       />
       {points.map((point, index) => (
@@ -200,12 +200,12 @@ function SeriesPlot({ values }: { values: number[] }) {
           cx={point.x}
           cy={point.y}
           r="4"
-          fill="#8a68ce"
+          fill="var(--accent)"
           stroke="white"
           strokeWidth="2"
         />
       ))}
-      <text x="250" y="147" textAnchor="middle" fontSize="10" fill="#9699a4">
+      <text x="250" y="147" textAnchor="middle" fontSize="10" fill="var(--viz-label)">
         {values.length > 40
           ? "Первые 40 измерений"
           : "Последовательность измерений"}

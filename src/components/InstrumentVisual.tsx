@@ -54,7 +54,7 @@ export default function InstrumentVisual({ type, value, max, unit, band }: Props
           height="24"
           patternUnits="userSpaceOnUse"
         >
-          <circle cx="1" cy="1" r="0.8" fill="#dfe1e9" />
+          <circle cx="1" cy="1" r="0.8" fill="var(--instrument-dot)" />
         </pattern>
       </defs>
       <rect
@@ -186,7 +186,7 @@ export default function InstrumentVisual({ type, value, max, unit, band }: Props
             y="307"
             textAnchor="middle"
             fontSize="14"
-            fill="#8061c4"
+            fill="var(--accent-deep)"
             fontFamily="monospace"
           >
             {formatNumber(value, 2)} мм
@@ -248,7 +248,7 @@ export default function InstrumentVisual({ type, value, max, unit, band }: Props
               y="273"
               textAnchor="middle"
               fontSize="16"
-              fill="#8061c4"
+              fill="var(--accent-deep)"
               fontFamily="monospace"
             >
               {formatNumber(value)} мм
@@ -364,7 +364,7 @@ export default function InstrumentVisual({ type, value, max, unit, band }: Props
             y="255"
             textAnchor="middle"
             fontSize="24"
-            fill="#8061c4"
+            fill="var(--accent-deep)"
             fontFamily="monospace"
           >
             {formatNumber(value, 2)} мм
@@ -457,14 +457,14 @@ export default function InstrumentVisual({ type, value, max, unit, band }: Props
               <path
                 d={bandArc}
                 fill="none"
-                stroke="rgba(138,101,206,0.16)"
+                stroke="var(--band-fill)"
                 strokeWidth="16"
                 strokeLinecap="round"
               />
               <path
                 d={bandArc}
                 fill="none"
-                stroke="rgba(138,101,206,0.45)"
+                stroke="var(--band-line)"
                 strokeWidth="1.5"
               />
             </>
@@ -474,7 +474,7 @@ export default function InstrumentVisual({ type, value, max, unit, band }: Props
             style={{ transformOrigin: "400px 275px" }}
             transition={{ type: "spring", stiffness: 110, damping: 20 }}
           >
-            <path d="M396 275 L400 91 L404 275 Z" fill="#8a65ce" />
+            <path d="M396 275 L400 91 L404 275 Z" fill="var(--accent)" />
           </motion.g>
           <circle cx="400" cy="275" r="13" fill="#656c7b" />
           <circle cx="400" cy="275" r="6" fill="#b8bdc7" />

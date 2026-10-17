@@ -23,9 +23,9 @@ const MODES: Record<Mode, { label: string; short: string; desc: string }> = {
 };
 
 const SHOT_COLORS: Record<Mode, { base: string; outlier: string }> = {
-  sys: { base: "#c6a086", outlier: "#c6a086" },
-  rand: { base: "#86a1c6", outlier: "#86a1c6" },
-  gross: { base: "#91ab9f", outlier: "#d0806d" },
+  sys: { base: "var(--warm)", outlier: "var(--warm)" },
+  rand: { base: "var(--info)", outlier: "var(--info)" },
+  gross: { base: "var(--ok)", outlier: "var(--bad)" },
 };
 
 /** Box-Muller: нормальная случайная величина. */
@@ -94,17 +94,17 @@ export default function TargetExperiment() {
           aria-label={`Мишень с ${shots.length} результатами измерений. Крестик отмечает среднее значение.`}
         >
           {[150, 100, 50].map((radius) => (
-            <circle key={radius} r={radius} fill="none" stroke="#e2ddeb" strokeWidth="1.5" />
+            <circle key={radius} r={radius} fill="none" stroke="var(--viz-axis)" strokeWidth="1.5" />
           ))}
           <circle
             r="164"
             fill="none"
-            stroke="#ddd6e8"
+            stroke="var(--viz-axis)"
             strokeWidth="1"
             strokeDasharray="4 6"
           />
-          <line x1="-164" y1="0" x2="164" y2="0" stroke="#e6e0ee" strokeWidth="1" />
-          <line x1="0" y1="-164" x2="0" y2="164" stroke="#e6e0ee" strokeWidth="1" />
+          <line x1="-164" y1="0" x2="164" y2="0" stroke="var(--viz-axis)" strokeWidth="1" />
+          <line x1="0" y1="-164" x2="0" y2="164" stroke="var(--viz-axis)" strokeWidth="1" />
           {stats && (
             <motion.g
               animate={{ x: stats.mx, y: stats.my }}
@@ -116,11 +116,11 @@ export default function TargetExperiment() {
                 width="14"
                 height="14"
                 fill="none"
-                stroke="#8864cb"
+                stroke="var(--accent)"
                 strokeWidth="1.6"
               />
-              <line x1="-12" y1="0" x2="12" y2="0" stroke="#8864cb" strokeWidth="1" />
-              <line x1="0" y1="-12" x2="0" y2="12" stroke="#8864cb" strokeWidth="1" />
+              <line x1="-12" y1="0" x2="12" y2="0" stroke="var(--accent)" strokeWidth="1" />
+              <line x1="0" y1="-12" x2="0" y2="12" stroke="var(--accent)" strokeWidth="1" />
             </motion.g>
           )}
           <AnimatePresence>
@@ -134,7 +134,7 @@ export default function TargetExperiment() {
                   cy={shot.y}
                   r="4.5"
                   fill={isOutlier ? palette.outlier : palette.base}
-                  stroke="#fff"
+                  stroke="var(--surface)"
                   strokeWidth="1.5"
                   initial={{ opacity: 0, scale: 3 }}
                   animate={{ opacity: 0.9, scale: 1 }}
@@ -145,9 +145,9 @@ export default function TargetExperiment() {
             })}
           </AnimatePresence>
           <g>
-            <circle r="9" fill="none" stroke="#8b6ac3" strokeWidth="1.4" />
-            <line x1="-16" y1="0" x2="16" y2="0" stroke="#8b6ac3" strokeWidth="1" />
-            <line x1="0" y1="-16" x2="0" y2="16" stroke="#8b6ac3" strokeWidth="1" />
+            <circle r="9" fill="none" stroke="var(--accent)" strokeWidth="1.4" />
+            <line x1="-16" y1="0" x2="16" y2="0" stroke="var(--accent)" strokeWidth="1" />
+            <line x1="0" y1="-16" x2="0" y2="16" stroke="var(--accent)" strokeWidth="1" />
           </g>
         </svg>
         <div className="range-endpoints">
